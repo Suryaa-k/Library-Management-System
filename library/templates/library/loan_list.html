@@ -1,0 +1,72 @@
+{% extends 'library/base.html' %}
+{% block title %}Active Loans — SVG Book World{% endblock %}
+{% block page_title %}Active Loans{% endblock %}
+
+{% block content %}
+<div class="filter-bar" style="margin-bottom:20px">
+  <div class="muted">{{ active_loans|length }} active · {{ returned_loans|length }} returned</div>
+  <a href="{% url 'issue_book' %}" class="btn btn-primary">+ Issue Book</a>
+</div>
+
+<div class="card mb-20">
+  <div class="card-header">Active Loans</div>
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr><th>Book</th><th>Copy</th><th>Visitor</th><th>Issued</th><th>Due Date</th><th>Status</th><th>Action</th></tr>
+      </thead>
+      <tbody>
+        {% for loan in active_loans %}
+        <tr class="{% if loan.is_overdue %}overdue-row{% endif %}">
+          <td><a href="{% url 'book_detail' loan.book_copy.book.pk %}" class="link">{{ loan.book_copy.book.title }}</a></td>
+          <td class="mono muted-sm">{{ loan.book_copy.copy_code }}</td>
+          <td><a href="{% url 'visitor_detail' loan.visitor.pk %}" class="link">{{ loan.visitor.full_name }}</a></td>
+          <td class="muted">{{ loan.issued_date|date:"d/m/Y" }}</td>
+          <td class="{% if loan.is_overdue %}danger-text bold{% else %}muted{% endif %}">
+            {{ loan.due_date|date:"d/m/Y" }}{% if loan.is_overdue %} ⚠{% endif %}
+          </td>
+          <td>
+            {% if loan.is_overdue %}<span class="badge badge-overdue">Overdue</span>
+            {% else %}<span class="badge badge-active">Active</span>{% endif %}
+          </td>
+          <td>
+            <form method="post" action="{% url 'process_return' loan.pk %}" style="display:inline">
+              {% csrf_token %}
+              <input type="hidden" name="next" value="{% url 'loan_list' %}" />
+              <button type="submit" class="btn btn-success btn-sm">✓ Process Return</button>
+            </form>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7" class="empty-row">No active loans.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">Returned Loans</div>
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr><th>Book</th><th>Visitor</th><th>Issued</th><th>Due</th><th>Returned</th><th>Status</th></tr>
+      </thead>
+      <tbody>
+        {% for loan in returned_loans %}
+        <tr style="opacity:0.6">
+          <td>{{ loan.book_copy.book.title }}</td>
+          <td>{{ loan.visitor.full_name }}</td>
+          <td class="muted">{{ loan.issued_date|date:"d/m/Y" }}</td>
+          <td class="muted">{{ loan.due_date|date:"d/m/Y" }}</td>
+          <td class="muted">{{ loan.returned_date|date:"d/m/Y" }}</td>
+          <td><span class="badge badge-{{ loan.status|lower|cut:' ' }}">{{ loan.status }}</span></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" class="empty-row">No returns yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

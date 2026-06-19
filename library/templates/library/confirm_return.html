@@ -1,0 +1,22 @@
+{% extends 'library/base.html' %}
+{% block title %}Process Return — SVG Book World{% endblock %}
+{% block page_title %}Process Return{% endblock %}
+
+{% block content %}
+<div class="form-card">
+  <div class="confirm-icon">↩</div>
+  <h2 class="confirm-title">Process Return</h2>
+  <p class="confirm-msg">
+    Return <strong>"{{ loan.book_copy.book.title }}"</strong> from
+    <strong>{{ loan.visitor.full_name }}</strong>?<br/>
+    Due date was <strong>{{ loan.due_date|date:"d/m/Y" }}</strong>.
+    {% if loan.is_overdue %}<span class="danger-text"> (Overdue!)</span>{% endif %}
+  </p>
+  <form method="post" class="confirm-actions">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{% url 'loan_list' %}" />
+    <a href="{% url 'loan_list' %}" class="btn btn-ghost">Cancel</a>
+    <button type="submit" class="btn btn-success">✓ Confirm Return</button>
+  </form>
+</div>
+{% endblock %}

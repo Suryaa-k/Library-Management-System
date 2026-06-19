@@ -1,0 +1,110 @@
+{% extends 'library/base.html' %}
+{% block title %}Dashboard — SVG Book World{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<!-- Stat Cards -->
+<div class="stat-grid">
+  <div class="stat-card" style="--accent:#7aabcf">
+    <div class="stat-bar" style="background:#7aabcf"></div>
+    <div class="stat-label">Unique Titles</div>
+    <div class="stat-value" style="color:#7aabcf">{{ total_titles }}</div>
+    <div class="stat-sub">{{ total_copies }} total copies</div>
+  </div>
+  <div class="stat-card" style="--accent:#F5A623">
+    <div class="stat-bar" style="background:#F5A623"></div>
+    <div class="stat-label">Active Loans</div>
+    <div class="stat-value" style="color:#F5A623">{{ active_loan_count }}</div>
+    <div class="stat-sub">Books currently out</div>
+  </div>
+  <div class="stat-card" style="--accent:#E05C5C">
+    <div class="stat-bar" style="background:#E05C5C"></div>
+    <div class="stat-label">Overdue Books</div>
+    <div class="stat-value" style="color:#E05C5C">{{ overdue_count }}</div>
+    <div class="stat-sub">Past return date</div>
+  </div>
+  <div class="stat-card" style="--accent:#5ebd87">
+    <div class="stat-bar" style="background:#5ebd87"></div>
+    <div class="stat-label">Registered Visitors</div>
+    <div class="stat-value" style="color:#5ebd87">{{ total_visitors }}</div>
+    <div class="stat-sub">In directory</div>
+  </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="section-label">Quick Actions</div>
+<div class="quick-actions">
+  <a href="{% url 'issue_book' %}" class="btn btn-primary">+ Issue a Book</a>
+  <a href="{% url 'loan_list' %}" class="btn btn-ghost">↩ Process Return</a>
+  <a href="{% url 'visitor_add' %}" class="btn btn-ghost">+ Register Visitor</a>
+  <a href="{% url 'book_add' %}" class="btn btn-ghost">+ Add Book</a>
+</div>
+
+<!-- Overdue Alert -->
+{% if overdue_loans %}
+<div class="card card-danger" style="margin-bottom:20px">
+  <div class="card-header">
+    <span class="danger-text">⚠ Overdue Books ({{ overdue_loans|length }})</span>
+  </div>
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Book</th><th>Visitor</th><th>Due Date</th><th>Days Overdue</th><th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for loan in overdue_loans %}
+        <tr class="overdue-row">
+          <td>{{ loan.book_copy.book.title }}</td>
+          <td><a href="{% url 'visitor_detail' loan.visitor.pk %}" class="link">{{ loan.visitor.full_name }}</a></td>
+          <td class="danger-text">{{ loan.due_date|date:"d/m/Y" }}</td>
+          <td class="danger-text bold">{{ loan.due_date|timesince }} ago</td>
+          <td>
+            <form method="post" action="{% url 'process_return' loan.pk %}" style="display:inline">
+              {% csrf_token %}
+              <input type="hidden" name="next" value="/" />
+              <button type="submit" class="btn btn-success btn-sm">✓ Return</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+<!-- Recent Loans -->
+<div class="card">
+  <div class="card-header">Recent Loan Activity</div>
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr><th>Book</th><th>Visitor</th><th>From</th><th>Due</th><th>Status</th></tr>
+      </thead>
+      <tbody>
+        {% for loan in recent_loans %}
+        <tr>
+          <td><a href="{% url 'book_detail' loan.book_copy.book.pk %}" class="link">{{ loan.book_copy.book.title }}</a></td>
+          <td><a href="{% url 'visitor_detail' loan.visitor.pk %}" class="link">{{ loan.visitor.full_name }}</a></td>
+          <td class="muted">{{ loan.issued_date|date:"d/m/Y" }}</td>
+          <td class="muted">{{ loan.due_date|date:"d/m/Y" }}</td>
+          <td>
+            {% if loan.returned_date %}
+              <span class="badge badge-{{ loan.status|lower|cut:' ' }}">{{ loan.status }}</span>
+            {% elif loan.is_overdue %}
+              <span class="badge badge-overdue">Overdue</span>
+            {% else %}
+              <span class="badge badge-active">Active</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5" class="empty-row">No loans yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,129 @@
+{% extends 'library/base.html' %}
+{% block title %}{{ book.title }} — SVG Book World{% endblock %}
+{% block page_title %}Book Detail{% endblock %}
+
+{% block content %}
+<div class="back-row">
+  <a href="{% url 'book_list' %}" class="back-link">← Back to Books</a>
+  <div class="action-row">
+    <a href="{% url 'add_copy' book.pk %}" class="btn btn-ghost btn-sm">+ Add Copy</a>
+    <a href="{% url 'book_edit' book.pk %}" class="btn btn-ghost btn-sm">✏ Edit</a>
+    <a href="{% url 'book_delete' book.pk %}" class="btn btn-danger btn-sm">🗑 Delete</a>
+  </div>
+</div>
+
+<!-- Book Header -->
+<div class="card mb-20">
+  <div class="book-detail-header">
+    <div class="book-detail-cover">
+      <img src="{{ book.cover_url }}" alt="{{ book.title }}" class="detail-cover-img"
+        onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
+      <div class="book-cover-fallback large">📚</div>
+    </div>
+    <div class="book-detail-info">
+      <h2 class="detail-title">{{ book.title }}</h2>
+      <div class="detail-author">by {{ book.author }}</div>
+      {% if book.series %}<div class="detail-series">Series: {{ book.series }}</div>{% endif %}
+      <div class="detail-meta-grid">
+        <div class="meta-item"><div class="meta-label">Genre</div><div class="meta-val">{{ book.genre }}</div></div>
+        <div class="meta-item"><div class="meta-label">Year</div><div class="meta-val">{{ book.publication_year }}</div></div>
+        <div class="meta-item"><div class="meta-label">Shelf</div><div class="meta-val">{{ book.shelf_location }}</div></div>
+        <div class="meta-item"><div class="meta-label">ISBN</div><div class="meta-val mono">{{ book.isbn }}</div></div>
+        <div class="meta-item"><div class="meta-label">Total Copies</div><div class="meta-val">{{ book.total_copies }}</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="two-col mb-20">
+  <!-- Copy Status -->
+  <div class="card">
+    <div class="card-header">Copy Status</div>
+    {% for copy in book.copies.all %}
+    <div class="copy-row">
+      <div>
+        <div class="copy-code mono">Copy #{{ copy.copy_code }}</div>
+        {% with active_loan=copy.loans.filter %}
+        {% for loan in copy.loans.all %}
+          {% if not loan.returned_date %}
+          <div class="copy-loan-info">→ {{ loan.visitor.full_name }} · Due {{ loan.due_date|date:"d/m/Y" }}</div>
+          {% endif %}
+        {% endfor %}
+        {% endwith %}
+      </div>
+      <span class="badge badge-{{ copy.status|lower|cut:' ' }}">{{ copy.status }}</span>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Availability -->
+  <div class="card">
+    <div class="card-header">Availability</div>
+    {% with total=book.total_copies %}
+    <div class="avail-row">
+      <span class="avail-label">Available</span>
+      <div class="avail-bar-wrap">
+        <div class="avail-bar" style="width:{% widthratio book.available_copies total 100 %}%;background:#5ebd87"></div>
+      </div>
+      <span class="avail-count">{{ book.available_copies }}</span>
+    </div>
+    <div class="avail-row">
+      <span class="avail-label">Lent Out</span>
+      <div class="avail-bar-wrap">
+        <div class="avail-bar" style="width:{% widthratio book.lent_copies total 100 %}%;background:#F5A623"></div>
+      </div>
+      <span class="avail-count">{{ book.lent_copies }}</span>
+    </div>
+    <div class="avail-row">
+      <span class="avail-label">Maintenance</span>
+      <div class="avail-bar-wrap">
+        <div class="avail-bar" style="width:{% widthratio book.maintenance_copies total 100 %}%;background:#E05C5C"></div>
+      </div>
+      <span class="avail-count">{{ book.maintenance_copies }}</span>
+    </div>
+    {% endwith %}
+  </div>
+</div>
+
+<!-- Loan History -->
+<div class="card">
+  <div class="card-header">Loan History</div>
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr><th>Visitor</th><th>From</th><th>Due</th><th>Returned</th><th>Status</th><th>Action</th></tr>
+      </thead>
+      <tbody>
+        {% for loan in loans %}
+        <tr>
+          <td><a href="{% url 'visitor_detail' loan.visitor.pk %}" class="link">{{ loan.visitor.full_name }}</a></td>
+          <td class="muted">{{ loan.issued_date|date:"d/m/Y" }}</td>
+          <td class="muted">{{ loan.due_date|date:"d/m/Y" }}</td>
+          <td class="muted">{{ loan.returned_date|date:"d/m/Y"|default:"—" }}</td>
+          <td>
+            {% if loan.returned_date %}
+              <span class="badge badge-{{ loan.status|lower|cut:' ' }}">{{ loan.status }}</span>
+            {% elif loan.is_overdue %}
+              <span class="badge badge-overdue">Overdue</span>
+            {% else %}
+              <span class="badge badge-active">Active</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if not loan.returned_date %}
+            <form method="post" action="{% url 'process_return' loan.pk %}" style="display:inline">
+              {% csrf_token %}
+              <input type="hidden" name="next" value="{% url 'book_detail' book.pk %}" />
+              <button type="submit" class="btn btn-success btn-xs">✓ Return</button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" class="empty-row">No loan history yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

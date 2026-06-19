@@ -1,0 +1,36 @@
+{% extends 'library/base.html' %}
+{% block title %}Issue Book — SVG Book World{% endblock %}
+{% block page_title %}Issue a Book{% endblock %}
+
+{% block content %}
+<div class="back-row">
+  <a href="{% url 'loan_list' %}" class="back-link">← Back to Loans</a>
+</div>
+<div class="form-card">
+  <form method="post">
+    {% csrf_token %}
+    <div class="form-group">
+      <label class="form-label">Select Available Copy *</label>
+      {{ form.book_copy }}
+    </div>
+    <div class="form-group">
+      <label class="form-label">Visitor *</label>
+      {{ form.visitor }}
+    </div>
+    <div class="form-grid-2">
+      <div class="form-group">
+        <label class="form-label">Issue Date *</label>
+        {{ form.issued_date }}
+      </div>
+      <div class="form-group">
+        <label class="form-label">Due Date *</label>
+        {{ form.due_date }}
+      </div>
+    </div>
+    <div class="form-actions">
+      <a href="{% url 'loan_list' %}" class="btn btn-ghost">Cancel</a>
+      <button type="submit" class="btn btn-primary">Confirm Issue</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

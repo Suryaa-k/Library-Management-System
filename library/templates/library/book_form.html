@@ -1,0 +1,55 @@
+{% extends 'library/base.html' %}
+{% block title %}{{ action }} — SVG Book World{% endblock %}
+{% block page_title %}{{ action }}{% endblock %}
+
+{% block content %}
+<div class="back-row">
+  <a href="{% url 'book_list' %}" class="back-link">← Back to Books</a>
+</div>
+<div class="form-card">
+  <form method="post">
+    {% csrf_token %}
+    <div class="form-grid-2">
+      <div class="form-group">
+        <label class="form-label">Title *</label>
+        {{ form.title }}
+        {% if form.title.errors %}<div class="form-error">{{ form.title.errors.0 }}</div>{% endif %}
+      </div>
+      <div class="form-group">
+        <label class="form-label">Author *</label>
+        {{ form.author }}
+        {% if form.author.errors %}<div class="form-error">{{ form.author.errors.0 }}</div>{% endif %}
+      </div>
+      <div class="form-group">
+        <label class="form-label">ISBN / Barcode *</label>
+        {{ form.isbn }}
+        {% if form.isbn.errors %}<div class="form-error">{{ form.isbn.errors.0 }}</div>{% endif %}
+      </div>
+      <div class="form-group">
+        <label class="form-label">Genre *</label>
+        {{ form.genre }}
+      </div>
+      <div class="form-group">
+        <label class="form-label">Series</label>
+        {{ form.series }}
+      </div>
+      <div class="form-group">
+        <label class="form-label">Publication Year</label>
+        {{ form.publication_year }}
+      </div>
+      <div class="form-group">
+        <label class="form-label">Shelf Location *</label>
+        {{ form.shelf_location }}
+      </div>
+      <div class="form-group">
+        <label class="form-label">Cover Image URL</label>
+        {{ form.cover_url }}
+      </div>
+    </div>
+    <div class="form-actions">
+      <a href="{% url 'book_list' %}" class="btn btn-ghost">Cancel</a>
+      <button type="submit" class="btn btn-primary">{{ action }}</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

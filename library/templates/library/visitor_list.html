@@ -1,0 +1,46 @@
+{% extends 'library/base.html' %}
+{% block title %}Visitors — SVG Book World{% endblock %}
+{% block page_title %}Visitor Directory{% endblock %}
+
+{% block content %}
+<div class="filter-bar">
+  <form method="get" class="filter-form">
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" name="q" value="{{ q }}" placeholder="Search name, email, phone…" class="form-input search-input" />
+    </div>
+    <button type="submit" class="btn btn-ghost btn-sm">Search</button>
+    {% if q %}<a href="{% url 'visitor_list' %}" class="btn btn-ghost btn-sm">✕ Clear</a>{% endif %}
+  </form>
+  <a href="{% url 'visitor_add' %}" class="btn btn-primary">+ Register Visitor</a>
+</div>
+
+<div class="visitor-grid">
+  {% for visitor in visitors %}
+  <div class="visitor-card">
+    <div class="visitor-avatar">{{ visitor.full_name|first }}</div>
+    <div class="visitor-info">
+      <div class="visitor-name">{{ visitor.full_name }}</div>
+      <div class="visitor-age">Age {{ visitor.age }}</div>
+      <div class="visitor-contact">📧 {{ visitor.email }}</div>
+      <div class="visitor-contact">📞 {{ visitor.phone }}</div>
+      <div class="visitor-badge-row">
+        {% if visitor.active_loans_count > 0 %}
+          <span class="badge badge-active">Active</span>
+        {% else %}
+          <span class="badge badge-returnedontime">Returned</span>
+        {% endif %}
+        <span class="muted-sm">{{ visitor.active_loans_count }} active loan{{ visitor.active_loans_count|pluralize }}</span>
+      </div>
+    </div>
+    <div class="visitor-card-actions">
+      <a href="{% url 'visitor_detail' visitor.pk %}" class="btn btn-ghost btn-xs">View</a>
+      <a href="{% url 'visitor_edit' visitor.pk %}" class="btn btn-ghost btn-xs">Edit</a>
+      <a href="{% url 'visitor_delete' visitor.pk %}" class="btn btn-danger btn-xs">Delete</a>
+    </div>
+  </div>
+  {% empty %}
+  <div class="empty-state">No visitors found. <a href="{% url 'visitor_add' %}">Register one?</a></div>
+  {% endfor %}
+</div>
+{% endblock %}

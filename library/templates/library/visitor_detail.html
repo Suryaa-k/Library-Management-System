@@ -1,0 +1,84 @@
+{% extends 'library/base.html' %}
+{% block title %}{{ visitor.full_name }} — SVG Book World{% endblock %}
+{% block page_title %}Visitor Profile{% endblock %}
+
+{% block content %}
+<div class="back-row">
+  <a href="{% url 'visitor_list' %}" class="back-link">← Back to Visitors</a>
+  <div class="action-row">
+    <a href="{% url 'visitor_edit' visitor.pk %}" class="btn btn-ghost btn-sm">✏ Edit</a>
+    <a href="{% url 'visitor_delete' visitor.pk %}" class="btn btn-danger btn-sm">🗑 Delete</a>
+  </div>
+</div>
+
+<div class="visitor-detail-grid">
+  <!-- Profile Card -->
+  <div class="card visitor-profile-card">
+    <div class="profile-avatar">{{ visitor.full_name|first }}</div>
+    <div class="profile-name">{{ visitor.full_name }}</div>
+    <div class="profile-id">Visitor ID #{{ visitor.pk }}</div>
+    <div class="profile-divider"></div>
+    <div class="profile-field"><div class="profile-field-label">Age</div><div class="profile-field-val">{{ visitor.age }}</div></div>
+    <div class="profile-field"><div class="profile-field-label">Email</div><div class="profile-field-val">{{ visitor.email }}</div></div>
+    <div class="profile-field"><div class="profile-field-label">Phone</div><div class="profile-field-val">{{ visitor.phone }}</div></div>
+    <div class="profile-field"><div class="profile-field-label">Address</div><div class="profile-field-val">{{ visitor.address }}</div></div>
+    <div class="profile-field">
+      <div class="profile-field-label">Aadhaar</div>
+      <div class="profile-field-val aadhaar">🔒 {{ visitor.aadhaar_masked }}</div>
+    </div>
+    <div class="profile-field"><div class="profile-field-label">Registered</div><div class="profile-field-val muted">{{ visitor.registered_at|date:"d/m/Y" }}</div></div>
+  </div>
+
+  <!-- Loans Section -->
+  <div>
+    <!-- Stats -->
+    <div class="loan-stats-grid mb-20">
+      <div class="loan-stat"><div class="loan-stat-label">Total Loans</div><div class="loan-stat-val" style="color:#7aabcf">{{ loans|length }}</div></div>
+      <div class="loan-stat"><div class="loan-stat-label">Active</div><div class="loan-stat-val" style="color:#F5A623">{{ visitor.active_loans_count }}</div></div>
+      <div class="loan-stat"><div class="loan-stat-label">Returned</div><div class="loan-stat-val" style="color:#5ebd87">{{ loans|length|add:"-"|add:visitor.active_loans_count }}</div></div>
+    </div>
+
+    <!-- Borrowing History -->
+    <div class="card">
+      <div class="card-header">Borrowing History</div>
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr><th>Book Title</th><th>Checkout</th><th>Due</th><th>Returned</th><th>Status</th><th>Action</th></tr>
+          </thead>
+          <tbody>
+            {% for loan in loans %}
+            <tr>
+              <td><a href="{% url 'book_detail' loan.book_copy.book.pk %}" class="link">{{ loan.book_copy.book.title }}</a></td>
+              <td class="muted">{{ loan.issued_date|date:"d/m/Y" }}</td>
+              <td class="muted">{{ loan.due_date|date:"d/m/Y" }}</td>
+              <td class="muted">{{ loan.returned_date|date:"d/m/Y"|default:"—" }}</td>
+              <td>
+                {% if loan.returned_date %}
+                  <span class="badge badge-{{ loan.status|lower|cut:' ' }}">{{ loan.status }}</span>
+                {% elif loan.is_overdue %}
+                  <span class="badge badge-overdue">Overdue</span>
+                {% else %}
+                  <span class="badge badge-active">Active</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if not loan.returned_date %}
+                <form method="post" action="{% url 'process_return' loan.pk %}" style="display:inline">
+                  {% csrf_token %}
+                  <input type="hidden" name="next" value="{% url 'visitor_detail' visitor.pk %}" />
+                  <button type="submit" class="btn btn-success btn-xs">✓ Return</button>
+                </form>
+                {% endif %}
+              </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6" class="empty-row">No loans yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

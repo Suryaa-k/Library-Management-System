@@ -1,0 +1,24 @@
+{% extends 'library/base.html' %}
+{% block title %}Delete {{ object_type }} — SVG Book World{% endblock %}
+{% block page_title %}Delete {{ object_type }}{% endblock %}
+
+{% block content %}
+<div class="form-card">
+  <div class="confirm-icon">🗑</div>
+  <h2 class="confirm-title">Delete {{ object_type }}</h2>
+  <p class="confirm-msg">
+    Are you sure you want to delete <strong>"{{ object }}"</strong>?
+    {% if object_type == 'Book' %}
+      This will also remove all copies and loan records.
+    {% else %}
+      Any active loans will be auto-returned before deletion.
+    {% endif %}
+    <br/><strong>This action cannot be undone.</strong>
+  </p>
+  <form method="post" class="confirm-actions">
+    {% csrf_token %}
+    <a href="{{ cancel_url }}" class="btn btn-ghost">Cancel</a>
+    <button type="submit" class="btn btn-danger">Yes, Delete</button>
+  </form>
+</div>
+{% endblock %}
